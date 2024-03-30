@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>酒一杯</title>
+  <icon>http://example.com/icon.png</icon>
+  <subtitle>酒一杯</subtitle>
+  <link href="http://example.com/atom.xml" rel="self"/>
+  
+  <link href="http://example.com/"/>
+  <updated>2024-03-30T16:08:25.000Z</updated>
+  <id>http://example.com/</id>
+  
+  <author>
+    <name>Vespera</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>MeandMyGirlfriend Walkthrough</title>
+    <link href="http://example.com/posts/41077065.html"/>
+    <id>http://example.com/posts/41077065.html</id>
+    <published>2024-03-30T16:08:25.000Z</published>
+    <updated>2024-03-30T16:08:25.000Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Reconnaissance&quot;&gt;&lt;a href=&quot;#Reconnaissance&quot; class=&quot;headerlink&quot; title=&quot;Reconnaissance&quot;&gt;&lt;/a&gt;Reconnaissance&lt;/h1&gt;&lt;h2 id=&quot;Nmap&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="Walkthrough" scheme="http://example.com/categories/Walkthrough/"/>
+    
+    
+    <category term="vulnhub" scheme="http://example.com/tags/vulnhub/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>MySQL 报错注入总结</title>
+    <link href="http://example.com/posts/4d79e97b.html"/>
+    <id>http://example.com/posts/4d79e97b.html</id>
+    <published>2024-03-26T16:00:00.000Z</published>
+    <updated>2024-03-30T16:12:46.753Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;报错注入指通过&lt;br&gt;而显示错误则需要在开发程序中采用 &lt;code&gt;print_r mysql_error()&lt;/code&gt; 函数，将 MySQL 错误信息输出。&lt;/p&gt;
+&lt;h1 id=&quot;xpath-报错&quot;&gt;&lt;a href=&quot;#xpath-报错&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="Websec" scheme="http://example.com/categories/Websec/"/>
+    
+    
+    <category term="SQLi" scheme="http://example.com/tags/SQLi/"/>
+    
+  </entry>
+  
+</feed>
