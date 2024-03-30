@@ -1,0 +1,10 @@
+http://example.com/posts/4d79e97b.html
+http://example.com/posts/41077065.html
+http://example.com/about/index.html
+http://example.com/categories/index.html
+http://example.com/tags/index.html
+http://example.com/
+http://example.com/tags/vulnhub/
+http://example.com/tags/SQLi/
+http://example.com/categories/Walkthrough/
+http://example.com/categories/Websec/
