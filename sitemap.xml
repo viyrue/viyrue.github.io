@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://example.com/posts/4d79e97b.html</loc>
+    <loc>https://surue.xyz/posts/4d79e97b.html</loc>
     
     <lastmod>2024-03-30</lastmod>
     
@@ -11,7 +11,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/posts/41077065.html</loc>
+    <loc>https://surue.xyz/posts/41077065.html</loc>
     
     <lastmod>2024-03-30</lastmod>
     
@@ -20,7 +20,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/about/index.html</loc>
+    <loc>https://surue.xyz/about/index.html</loc>
     
     <lastmod>2024-03-27</lastmod>
     
@@ -29,7 +29,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/index.html</loc>
+    <loc>https://surue.xyz/categories/index.html</loc>
     
     <lastmod>2024-03-27</lastmod>
     
@@ -38,7 +38,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/index.html</loc>
+    <loc>https://surue.xyz/tags/index.html</loc>
     
     <lastmod>2024-03-27</lastmod>
     
@@ -48,23 +48,23 @@
   
 
   <url>
-    <loc>http://example.com/</loc>
-    <lastmod>2024-03-30</lastmod>
+    <loc>https://surue.xyz/</loc>
+    <lastmod>2024-03-31</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   
   <url>
-    <loc>http://example.com/tags/vulnhub/</loc>
-    <lastmod>2024-03-30</lastmod>
+    <loc>https://surue.xyz/tags/vulnhub/</loc>
+    <lastmod>2024-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://example.com/tags/SQLi/</loc>
-    <lastmod>2024-03-30</lastmod>
+    <loc>https://surue.xyz/tags/SQLi/</loc>
+    <lastmod>2024-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
@@ -72,15 +72,15 @@
 
   
   <url>
-    <loc>http://example.com/categories/Walkthrough/</loc>
-    <lastmod>2024-03-30</lastmod>
+    <loc>https://surue.xyz/categories/Walkthrough/</loc>
+    <lastmod>2024-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/Websec/</loc>
-    <lastmod>2024-03-30</lastmod>
+    <loc>https://surue.xyz/categories/Websec/</loc>
+    <lastmod>2024-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>

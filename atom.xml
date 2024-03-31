@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>酒一杯</title>
-  <icon>http://example.com/icon.png</icon>
+  <icon>https://surue.xyz/icon.png</icon>
   <subtitle>酒一杯</subtitle>
-  <link href="http://example.com/atom.xml" rel="self"/>
+  <link href="https://surue.xyz/atom.xml" rel="self"/>
   
-  <link href="http://example.com/"/>
+  <link href="https://surue.xyz/"/>
   <updated>2024-03-30T16:08:25.000Z</updated>
-  <id>http://example.com/</id>
+  <id>https://surue.xyz/</id>
   
   <author>
     <name>Vespera</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>MeandMyGirlfriend Walkthrough</title>
-    <link href="http://example.com/posts/41077065.html"/>
-    <id>http://example.com/posts/41077065.html</id>
+    <link href="https://surue.xyz/posts/41077065.html"/>
+    <id>https://surue.xyz/posts/41077065.html</id>
     <published>2024-03-30T16:08:25.000Z</published>
     <updated>2024-03-30T16:08:25.000Z</updated>
     
@@ -34,17 +34,17 @@
     
     
     
-    <category term="Walkthrough" scheme="http://example.com/categories/Walkthrough/"/>
+    <category term="Walkthrough" scheme="https://surue.xyz/categories/Walkthrough/"/>
     
     
-    <category term="vulnhub" scheme="http://example.com/tags/vulnhub/"/>
+    <category term="vulnhub" scheme="https://surue.xyz/tags/vulnhub/"/>
     
   </entry>
   
   <entry>
     <title>MySQL 报错注入总结</title>
-    <link href="http://example.com/posts/4d79e97b.html"/>
-    <id>http://example.com/posts/4d79e97b.html</id>
+    <link href="https://surue.xyz/posts/4d79e97b.html"/>
+    <id>https://surue.xyz/posts/4d79e97b.html</id>
     <published>2024-03-26T16:00:00.000Z</published>
     <updated>2024-03-30T16:12:46.753Z</updated>
     
@@ -60,10 +60,10 @@
     
     
     
-    <category term="Websec" scheme="http://example.com/categories/Websec/"/>
+    <category term="Websec" scheme="https://surue.xyz/categories/Websec/"/>
     
     
-    <category term="SQLi" scheme="http://example.com/tags/SQLi/"/>
+    <category term="SQLi" scheme="https://surue.xyz/tags/SQLi/"/>
     
   </entry>
   
